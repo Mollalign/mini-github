@@ -1,0 +1,9 @@
+[project]
+name = "github-backend"
+version = "0.1.0"
+description = "This is backend for min-github. it is github clone for learning purpose"
+readme = "README.md"
+requires-python = ">=3.12"
+dependencies = [
+    "fastapi>=0.141.1",
+]

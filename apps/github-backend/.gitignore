@@ -1,0 +1,39 @@
+# --- Python / FastAPI Specific ---
+__pycache__/
+*.py[cod]
+*$py.class
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+htmlcov/
+.coverage
+.coverage.*
+
+# --- uv / Virtual Environments ---
+.venv/
+venv/
+ENV/
+env/
+
+# --- Environment Variables & Secrets ---
+.env
+.env.*
+!.env.example
+*.podspec
+
+# --- IDEs and Editors ---
+.vscode/
+!.vscode/settings.json
+!.vscode/tasks.json
+!.vscode/launch.json
+!.vscode/extensions.json
+.idea/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.swp
+
+# --- OS Specific ---
+.DS_Store
+Thumbs.db
