@@ -10,18 +10,8 @@ from typing import Literal
 from pydantic import Field, model_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
-
 Environment = Literal["development", "staging", "production", "test"]
 
-
-class Settings(BaseSettings):
-    model_config = SettingsConfigDict(
-        env_file=".env",
-        env_file_encoding="utf-8",
-        case_sensitive=False,
-        extra="ignore"
-    )
-    app_name: str = Field(default="Github Clone")
 
 class Settings(BaseSettings):
     model_config = SettingsConfigDict(
@@ -54,6 +44,10 @@ class Settings(BaseSettings):
         default="",
         alias="DATABASE_URL",
     )
+    db_pool_size: int = Field(default=10, alias="DB_POOL_SIZE")
+    db_max_overflow: int = Field(default=20, alias="DB_MAX_OVERFLOW")
+    db_pool_timeout: int = Field(default=30, alias="DB_POOL_TIMEOUT")
+    db_echo: bool = Field(default=False, alias="DB_ECHO")
 
     # Redis
     redis_url: str = Field(
@@ -93,6 +87,26 @@ class Settings(BaseSettings):
         alias="MAX_PAGE_SIZE",
     )
 
+    # Security
+    cors_origins: list[str] = Field(
+        default_factory=lambda: ["http://localhost:3000", "http://localhost:5173"],
+        alias="CORS_ORIGINS",
+    )
+    trusted_hosts: list[str] = Field(
+        default_factory=lambda: ["*"],
+        alias="TRUSTED_HOSTS",
+    )
+
+    # Logging
+    log_level: str = Field(
+        default="INFO",
+        alias="LOG_LEVEL",
+    )
+    log_json: bool = Field(
+        default=False,
+        alias="LOG_JSON",
+    )
+
     @property
     def is_production(self) -> bool:
         return self.environment == "production"
@@ -100,7 +114,6 @@ class Settings(BaseSettings):
     @property
     def is_development(self) -> bool:
         return self.environment == "development"
-    
 
     @model_validator(mode="after")
     def validate_production_settings(self) -> "Settings":
