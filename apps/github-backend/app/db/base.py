@@ -22,8 +22,3 @@ class TimestampIdMixin:
         onupdate=func.now(),
         nullable=False,
     )
-
-
-# Import all models here for Alembic
-from app.modules.users.models import User
-# from app.modules.repositories.models import Repository
