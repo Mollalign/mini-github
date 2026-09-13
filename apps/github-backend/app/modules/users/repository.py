@@ -14,8 +14,6 @@ class UserRepository:
     async def create(self, user: User) -> User:
         self.db.add(user)
         await self.db.flush()
-        await self.db.refresh(user)
-
         return user
 
     # Get User By id

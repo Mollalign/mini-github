@@ -9,6 +9,7 @@ from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse
 from starlette.exceptions import HTTPException as StarletteHTTPException
 
+from app.common.exceptions import AppException
 from app.common.responses import ErrorDetail, ErrorResponse
 
 logger = structlog.get_logger(__name__)
@@ -16,6 +17,25 @@ logger = structlog.get_logger(__name__)
 
 def register_exception_handlers(app: FastAPI) -> None:
     """Map operational and unhandled system exceptions to the ErrorResponse contract."""
+
+    @app.exception_handler(AppException)
+    async def app_exception_handler(
+        request: Request, exc: AppException
+    ) -> JSONResponse:
+        logger.warning(
+            "application_exception_raised",
+            status_code=exc.status_code,
+            code=exc.code,
+        )
+
+        response_body = ErrorResponse(
+            errors=[ErrorDetail(code=exc.code, message=exc.message)],
+            meta=exc.details,
+        )
+        return JSONResponse(
+            status_code=exc.status_code,
+            content=jsonable_encoder(response_body),
+        )
 
     @app.exception_handler(RequestValidationError)
     async def validation_exception_handler(

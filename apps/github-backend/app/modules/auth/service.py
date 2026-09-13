@@ -1,4 +1,5 @@
 from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.exc import IntegrityError
 from uuid import UUID
 
 from app.core.security import (
@@ -18,35 +19,47 @@ from app.modules.auth.schemas import (
 )
 from app.modules.users.models import User
 from app.modules.users.repository import UserRepository
+from app.common.exceptions import ConflictException
 
 class AuthService:
     def __init__(self, db: AsyncSession):
+        self.db = db
         self.user_repo = UserRepository(db)
 
 
     # Register User
     async def register(self, data: RegisterRequest) -> AuthResponse:
-        # Check username
-        existing_username = await self.user_repo.get_by_username(data.username)
+        try:
+            async with self.db.begin():
+                # These checks provide a useful error response. Database unique
+                existing_username = await self.user_repo.get_by_username(data.username)
+                if existing_username:
+                    raise ConflictException(
+                        "Username is already taken",
+                        code="username_taken",
+                    )
 
-        if existing_username:
-            raise ValueError("Username is already taken")
+                existing_email = await self.user_repo.get_by_email(data.email)
+                if existing_email:
+                    raise ConflictException(
+                        "Email is already registered",
+                        code="email_taken",
+                    )
 
-        # Check email
-        existing_email = await self.user_repo.get_by_email(data.email)
+                user = User(
+                    username=data.username,
+                    email=data.email,
+                    password_hash=hash_password(data.password),
+                    full_name=data.full_name,
+                )
+                user = await self.user_repo.create(user)
+        except IntegrityError as exc:
+            raise ConflictException(
+                "Username or email is already registered",
+                code="duplicate_user",
+            ) from exc
 
-        if existing_email:
-            raise ValueError("email is already registered")
-
-        # Create user
-        user = User(
-            username=data.username,
-            email=data.email,
-            password_hash=hash_password(data.password),
-            full_name=data.full_name,
-        )
-
-        user = await self.user_repo.create(user)
+        await self.db.refresh(user)
 
         # Generate tokens
         access_token = create_access_token(user.id)
@@ -123,4 +136,3 @@ class AuthService:
 
 
         
-

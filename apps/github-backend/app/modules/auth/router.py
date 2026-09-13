@@ -13,6 +13,7 @@ from app.modules.auth.schemas import (
 )
 from app.api.deps import CurrentUser
 from app.modules.auth.service import AuthService
+from app.common.responses import SuccessResponse, ok
 
 router = APIRouter(
     prefix="/auth",
@@ -22,7 +23,7 @@ router = APIRouter(
 # Register
 @router.post(
     "/register",
-    response_model=AuthResponse,
+    response_model=SuccessResponse[AuthResponse],
     status_code=status.HTTP_201_CREATED,
 )
 async def register(
@@ -32,7 +33,8 @@ async def register(
     service = AuthService(db)
 
     try:
-        return await service.register(data)
+        result = await service.register(data)
+        return ok(result)
     except ValueError as exc:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
@@ -42,7 +44,7 @@ async def register(
 # Login
 @router.post(
     "/login",
-    response_model=AuthResponse,
+    response_model=SuccessResponse[AuthResponse],
 )
 async def login(
     data: LoginRequest,
@@ -51,7 +53,8 @@ async def login(
     service = AuthService(db)
 
     try:
-        return await service.login(data)
+        result = await service.login(data)
+        return ok(result)
     except ValueError as exc:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
@@ -61,7 +64,7 @@ async def login(
 # Reset Token By Refresh token
 @router.post(
     "/refresh",
-    response_model=TokenResponse,
+    response_model=SuccessResponse[TokenResponse],
 )
 async def refresh_token(
     data: RefreshTokenRequest,
@@ -70,7 +73,8 @@ async def refresh_token(
     service = AuthService(db)
 
     try:
-        return await service.refresh(data)
+        result = await service.refresh(data)
+        return ok(result)
     except (ValueError, TypeError):
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
@@ -80,9 +84,9 @@ async def refresh_token(
 # Get Current User
 @router.get(
     "/me",
-    response_model=UserResponse,
+    response_model=SuccessResponse[UserResponse],
 )
 async def get_me(
     current_user: CurrentUser,
 ):
-    return current_user
+    return ok(current_user)
