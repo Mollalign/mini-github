@@ -1,8 +1,13 @@
+from typing import TYPE_CHECKING
 from uuid import UUID, uuid4
+
 from sqlalchemy import Boolean, DateTime, String, Text, func
-from sqlalchemy.orm import Mapped, mapped_column
+from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.db.base import Base, TimestampIdMixin
+
+if TYPE_CHECKING:
+    from app.modules.repositories.models import Repository
 
 
 class User(Base, TimestampIdMixin):
@@ -52,4 +57,10 @@ class User(Base, TimestampIdMixin):
         Boolean,
         default=True,
         nullable=False,
+    )
+
+    repositories: Mapped[list["Repository"]] = relationship(
+        "Repository",
+        back_populates="owner",
+        cascade="all, delete-orphan",
     )
